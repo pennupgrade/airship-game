@@ -17,10 +17,21 @@ Fall 2023 upgrade minigame :D
 
 ## Airship Resources:
 - Fuel
+- Condition
 - 
 
 ## Airship Indicators:
 - Altitude
+- Distance (Relative to Goal)
+- 
+
+## Environment Obstacles:
+- Acid Rain
+- Thunderstorm
+- Birds (No animals were harmed in the making of this project)
+- Wind Currents
+- Darkness
+- Radiation (?)
 
 ## Character Options:
 - Doberman Butler (BC)
