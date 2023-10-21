@@ -1,16 +1,27 @@
-# airship-game
+# The Blimp™
+Name TBA
 Fall 2023 upgrade minigame :D
 
-Airship Tasks:
+# Team:
+- Derek Ahn
+- Viraj Doshi
+- Raymond Feng
+- Di Lu
+- Miles Soto Aguayo
+- Christina Qiu
+- George Wang
+- Mei Wang
+
+## Airship Tasks:
 - 
 
-Airship Resources:
+## Airship Resources:
 - Fuel
 - 
 
-Airship Indicators:
+## Airship Indicators:
 - Altitude
 
-Character Options:
+## Character Options:
 - Doberman Butler (BC)
 - Engineer (Christina)
