@@ -5,12 +5,13 @@ using UnityEngine;
 public class PlayerMovement : MonoBehaviour
 {
     public float moveSpeed = 5f;
-    public float jumpForce = 30f;
-    public Transform groundCheck;
-    public LayerMask groundLayer;
-
     private Rigidbody2D rb;
-    private bool isGrounded;
+
+    public string up;
+    public string down;
+    public string left;
+    public string right;
+
 
     void Start()
     {
@@ -19,18 +20,18 @@ public class PlayerMovement : MonoBehaviour
     
     void Update()
     {
-        //isGrounded = Physics2D.OverlapCircle(groundCheck.position, 0.2f, groundLayer);
+        float x=0, y=0;
 
-        // Input handling
-        float horizontalInput = Input.GetAxisRaw("Horizontal");
-        float verticalInput = Input.GetAxisRaw("Vertical");
+        if (Input.GetKey(up)) y = 1;
+        if (Input.GetKey(down)) y = -1;
+        if (Input.GetKey(left)) x = -1;
+        if (Input.GetKey(right)) x = 1;
 
         // Calculate movement vector
-        Vector2 movement = new Vector2(horizontalInput, verticalInput).normalized;
+        Vector2 movement = new Vector2(x, y).normalized;
 
         // Move the player
         MovePlayer(movement);
-
 
     }
 
@@ -40,11 +41,5 @@ public class PlayerMovement : MonoBehaviour
         rb.velocity = new Vector2(movement.x * moveSpeed, movement.y * moveSpeed);
 
         
-    }
-
-    void Jump()
-    {
-        // Apply an upward force to simulate jumping
-        rb.velocity = new Vector2(rb.velocity.x, jumpForce);
     }
 }
