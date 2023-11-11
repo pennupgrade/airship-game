@@ -5,7 +5,7 @@ using UnityEngine;
 public class PlayerMovement : MonoBehaviour
 {
     public float moveSpeed = 5f;
-    public float jumpForce = 10f;
+    public float jumpForce = 30f;
     public Transform groundCheck;
     public LayerMask groundLayer;
 
@@ -19,7 +19,7 @@ public class PlayerMovement : MonoBehaviour
     
     void Update()
     {
-        isGrounded = Physics2D.OverlapCapsule(groundCheck.position, 0.2f, groundLayer);
+        //isGrounded = Physics2D.OverlapCircle(groundCheck.position, 0.2f, groundLayer);
 
         // Input handling
         float horizontalInput = Input.GetAxisRaw("Horizontal");
@@ -31,10 +31,7 @@ public class PlayerMovement : MonoBehaviour
         // Move the player
         MovePlayer(movement);
 
-        if (isGrounded && Input.GetButtonDown("Jump"))
-        {
-            Jump();
-        }
+
     }
 
     void MovePlayer(Vector2 movement)
