@@ -1,30 +1,30 @@
+/* 
+Resource Manager Class
+For the Airship Game
+By Bongo Cat (aka Miles Soto Aguayo)
+*/
+
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-// public class ResourceManager : MonoBehaviour
-// {
-//     // Start is called before the first frame update
-//     void Start()
-//     {
-        
-//     }
-
-//     // Update is called once per frame
-//     void Update()
-//     {
-        
-//     }
-// }
-
 public class ResourceManager : MonoBehaviour
 {
+    /* 
+    Resource Manager is a Singleton class that manages the resources of the Blimp
+    For this purpose the internal instance is private and static
+    Just making a static class could be an alternative.
+    (But that's cumbersome and the Unity Editor doesn't like it)
+    Even I like this way more.
+    */
     private static ResourceManager instance;
 
+    // Resources available are fuel, condition, and helium (air)
     [SerializeField] private float fuel = 100.0f;
     [SerializeField] private float condition = 100.0f;
-    [SerializeField] private float helium = 100.0f;
+    [SerializeField] private float air = 100.0f;
 
+    // The Instance can be accessed from anywhere
     public static ResourceManager Instance
     {
         get
@@ -59,9 +59,14 @@ public class ResourceManager : MonoBehaviour
         // Update resource values based on gameplay mechanics
         ConsumeFuel(0.1f);
         Damage(0.05f);
-        AdjustHelium(-0.1f);
+        Deplete(0.1f);
     }
 
+    /* The following methods are called by the ResourceButtons or Interactive Stations 
+    ConsumeFuel, Refuel, Damage, Repair, Recharge, and Deplete are all self-explanatory
+    They are floats because the Bars work with floats
+    And also because they are percentages
+    */
     public void ConsumeFuel(float amount)
     {
         if (fuel < 0.0f) {
@@ -105,15 +110,34 @@ public class ResourceManager : MonoBehaviour
         }
     }
 
-    public void AdjustHelium(float amount) {
-        if (helium > 100.0f) {
+    public void Recharge(float amount) {
+        if (air > 100.0f) {
             // Handle reaching maximum helium
             Debug.Log("Blimp has reached maximum helium!");
-        } else if (helium < 0.0f) {
+        } else {
+            air += amount;
+        }
+    }
+
+    public void Deplete(float amount) {
+        if (air < 0.0f) {
             // Handle helium depletion scenario
             Debug.Log("Blimp has run out of helium! Bye bye!");
         } else {
-            helium += amount;
+            air -= amount;
+        }
+    }
+
+    public float FetchValue(int i) {
+        switch (i) {
+            case 0:
+                return fuel;
+            case 1:
+                return condition;
+            case 2: 
+                return air;
+            default:
+                return 0.0f;
         }
     }
 }
