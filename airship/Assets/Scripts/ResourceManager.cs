@@ -24,6 +24,10 @@ public class ResourceManager : MonoBehaviour
     [SerializeField] private float condition = 100.0f;
     [SerializeField] private float air = 100.0f;
 
+    [SerializeField] private float fuelConsumptionRate = 1f;
+    [SerializeField] private float conditionDegradationRate = 0.5f;
+    [SerializeField] private float airConsumptionRate = 1f;
+
     // The Instance can be accessed from anywhere
     public static ResourceManager Instance
     {
@@ -57,9 +61,9 @@ public class ResourceManager : MonoBehaviour
     void Update()
     {
         // Update resource values based on gameplay mechanics
-        ConsumeFuel(0.1f);
-        Damage(0.05f);
-        Deplete(0.1f);
+        ConsumeFuel(fuelConsumptionRate / 100.0f);
+        Damage(conditionDegradationRate / 100.0f);
+        Deplete(airConsumptionRate / 100.0f);
     }
 
     /* The following methods are called by the ResourceButtons or Interactive Stations 
