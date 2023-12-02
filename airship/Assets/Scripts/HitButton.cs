@@ -6,7 +6,9 @@ public class HitButton : MonoBehaviour
 {
     [SerializeField] GameObject player1;
     [SerializeField] GameObject player2;
+
     public string dir;
+    public Navigation nav;
 
     private Vector3 position;
 
@@ -19,22 +21,25 @@ public class HitButton : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        
         if (collidePlayer()) {
             this.GetComponent<SpriteRenderer>().color = Color.red;
+    
             switch(dir) {
                 case "up": 
-                    up();
+                    if (Time.frameCount % 180 == 0) up();
                     break;
                 case "down":
-                    down();
+                    if (Time.frameCount % 180 == 0) down();
                     break;
                 case "left":
-                    left();
+                    if (Time.frameCount % 60 == 0) left();
                     break;
                 case "right":
-                    right();
+                    if (Time.frameCount % 60 == 0) right();
                     break;
             }
+            
         } else {
             this.GetComponent<SpriteRenderer>().color = Color.white;
         }
@@ -51,18 +56,18 @@ public class HitButton : MonoBehaviour
     }
 
     void up() {
-
+        nav.increaseY();
     }
 
     void down() {
-
+        nav.decreaseY();
     }
 
     void left() {
-
+        nav.turnLeft();
     }
 
     void right() {
-
+        nav.turnRight();
     }
 }
