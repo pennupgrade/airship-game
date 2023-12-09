@@ -22,13 +22,19 @@ public class MountainNoise : MonoBehaviour
     private float m_distBtwnPoints = 0.6f;
 
     // An array of size 30 of points representing a cross section of the noise function
-    private float[] m_crossSection = new float[35];
+    private float[] m_crossSectionHeights = new float[35];
 
     // Game object to represent the point
     [SerializeField]
     public GameObject pointRef;
 
-    private GameObject[] m_points = new GameObject[35];
+    [SerializeField]
+    public GameObject lineColliderRef;
+
+    // Keep handles to these game objects so we can modify their locations
+    private GameObject[] m_pointObjs = new GameObject[35];
+    private Vector2[] m_pointVecs = new Vector2[35];
+    private EdgeCollider2D m_lineCollider;
     
     // Applies interpolation to the noise
     private float fade(float t)
@@ -162,13 +168,13 @@ public class MountainNoise : MonoBehaviour
         Debug.Log("End: (" + m_endX + ", " + m_endY + ")");
 
         // Recompute the cross section
-        for (int i = 0; i < m_crossSection.Length; i++)
+        for (int i = 0; i < m_crossSectionHeights.Length; i++)
         {
             // linearly interpolate between the points
-            int currx = (int)Mathf.Floor(Mathf.Lerp(m_startX, m_endX, (float)i / (float)m_crossSection.Length));
-            int curry = (int)Mathf.Floor(Mathf.Lerp(m_startY, m_endY, (float)i / (float)m_crossSection.Length));
+            int currx = (int)Mathf.Floor(Mathf.Lerp(m_startX, m_endX, (float)i / (float)m_crossSectionHeights.Length));
+            int curry = (int)Mathf.Floor(Mathf.Lerp(m_startY, m_endY, (float)i / (float)m_crossSectionHeights.Length));
 
-            m_crossSection[i] = m_noiseMap[currx, curry] * m_amplitude;
+            m_crossSectionHeights[i] = m_noiseMap[currx, curry] * m_amplitude + m_baselineHeight;
         }
     }
 
@@ -177,13 +183,15 @@ public class MountainNoise : MonoBehaviour
     // And X is from 0 to 30
     void RenderCrossSection()
     {
-        for (int i = 0; i < m_crossSection.Length; i++)
+        for (int i = 0; i < m_crossSectionHeights.Length; i++)
         {
             // Move the location of the circle in m_crossSection[i] to the new location: (i, m_crossSection[i])
-            m_points[i].transform.position = new Vector3(i * m_distBtwnPoints, m_crossSection[i] + m_baselineHeight, 0);
-
-            
+            m_pointObjs[i].transform.position = new Vector3(i * m_distBtwnPoints, m_crossSectionHeights[i], 0);
+            m_pointVecs[i] = new Vector2(i * m_distBtwnPoints, m_crossSectionHeights[i]);
         }
+
+        // Update the collider
+        m_lineCollider.points = m_pointVecs;
     }
 
     // Start is called before the first frame update
@@ -205,24 +213,36 @@ public class MountainNoise : MonoBehaviour
         m_noiseMap = generateNoiseMap(99, 99);
 
         // From start point to end point, generate the noise along the line and store it in the cross section array
-        for (int i = 0; i < m_crossSection.Length; i++)
+        for (int i = 0; i < m_crossSectionHeights.Length; i++)
         {
             // linearly interpolate between the points
-            int x = (int)Mathf.Floor(Mathf.Lerp(m_startX, m_endX, (float)i / (float)m_crossSection.Length));
-            int y = (int)Mathf.Floor(Mathf.Lerp(m_startY, m_endY, (float)i / (float)m_crossSection.Length));
+            int x = (int)Mathf.Floor(Mathf.Lerp(m_startX, m_endX, (float)i / (float)m_crossSectionHeights.Length));
+            int y = (int)Mathf.Floor(Mathf.Lerp(m_startY, m_endY, (float)i / (float)m_crossSectionHeights.Length));
 
-            m_crossSection[i] = m_noiseMap[x,y] * m_amplitude; // generateNoise(x, y);
+            m_crossSectionHeights[i] = m_noiseMap[x,y] * m_amplitude + m_baselineHeight; // generateNoise(x, y);
         }
 
         // Generate 30 circles to represent the points in m_crossSection
         // Set their Y value to the value in m_crossSection and X to be from 0 to 30 with spaces between
-        for (int i = 0; i < m_crossSection.Length; i++)
+        for (int i = 0; i < m_crossSectionHeights.Length; i++)
         {
             // Create a 2d circle sprite of radius 5 pixels at the point (i, m_crossSection[i]) in screen space
-            GameObject point = GameObject.Instantiate(pointRef, new Vector3(i * m_distBtwnPoints, m_crossSection[i] + m_baselineHeight, 0), Quaternion.identity);
-            m_points[i] = point;
-
-            // Create a line collider where each of its points is the point (i, m_crossSection[i])
+            GameObject point = GameObject.Instantiate(pointRef, new Vector3(i * m_distBtwnPoints, m_crossSectionHeights[i], 0), Quaternion.identity);
+            m_pointObjs[i] = point;
+            m_pointVecs[i] = new Vector2(i * m_distBtwnPoints, m_crossSectionHeights[i]);
+        }
+        
+        // Create a line collider where each of its points is the point (i, m_crossSection[i])
+        GameObject lineCollider = GameObject.Instantiate(lineColliderRef, new Vector3(0, 0, 0), Quaternion.identity);
+        m_lineCollider = lineCollider.GetComponent<EdgeCollider2D>();
+        if (!m_lineCollider)
+        {
+            // Throw an error
+            Debug.Log("Error: Could not find EdgeCollider2D component on lineColliderRef");
+        }
+        else
+        {
+            m_lineCollider.points = m_pointVecs;
         }
     }
      
