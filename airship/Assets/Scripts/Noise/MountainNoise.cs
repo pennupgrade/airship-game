@@ -5,6 +5,7 @@ using UnityEngine;
 public class MountainNoise : MonoBehaviour
 {
     private float[,,] m_gradients = new float[100, 100, 2];
+    private float[,] m_noiseMap = new float[100, 100];
 
     // Starting location in x,y (random between 0 and 100)
     private float m_startX = 0.0f;
@@ -14,14 +15,20 @@ public class MountainNoise : MonoBehaviour
     private float m_endX = 0.0f;
     private float m_endY = 0.0f;
 
+    // DEBUG noise function values
+    private float m_amplitude = 5.0f;
+    private float m_frequency = 0.1f;
+    private float m_baselineHeight = -3.0f;
+    private float m_distBtwnPoints = 0.6f;
+
     // An array of size 30 of points representing a cross section of the noise function
-    private float[] m_crossSection = new float[30];
+    private float[] m_crossSection = new float[35];
 
     // Game object to represent the point
     [SerializeField]
     public GameObject pointRef;
 
-    private GameObject[] m_points = new GameObject[30];
+    private GameObject[] m_points = new GameObject[35];
     
     // Applies interpolation to the noise
     private float fade(float t)
@@ -33,6 +40,19 @@ public class MountainNoise : MonoBehaviour
     private float lerp(float t, float a, float b)
     {
         return a + t * (b - a);
+    }
+
+    // Generates the gradient
+    private float dotGridGradient(int ix, int iy, float x, float y)
+    {
+        float dx = x - ix;
+        float dy = y - iy;
+
+        // DEBUG LOG ix and iyi
+        Debug.Log("ix: " + ix + " iy: " + iy);
+        float gradient = dx * m_gradients[iy, ix, 0] + dy * m_gradients[iy, ix, 1];
+
+        return gradient;
     }
 
     // Generates the noise
@@ -61,17 +81,6 @@ public class MountainNoise : MonoBehaviour
         return value;
     }
 
-    // Generates the gradient
-    private float dotGridGradient(int ix, int iy, float x, float y)
-    {
-        float dx = x - ix;
-        float dy = y - iy;
-
-        float gradient = dx * m_gradients[iy, ix, 0] + dy * m_gradients[iy, ix, 1];
-
-        return gradient;
-    }
-
     // Generates the gradients
     private void generateGradients()
     {
@@ -87,15 +96,15 @@ public class MountainNoise : MonoBehaviour
     }
 
     // Generates the noise map
-    public float[,] generateNoiseMap(int width, int height, float scale)
+    public float[,] generateNoiseMap(int width, int height)
     {
         float[,] noiseMap = new float[width, height];
 
         generateGradients();
 
-        if (scale <= 0)
+        if (m_frequency <= 0)
         {
-            scale = 0.0001f;
+            m_frequency = 0.0001f;
         }
 
         float maxNoiseHeight = float.MinValue;
@@ -105,8 +114,8 @@ public class MountainNoise : MonoBehaviour
         {
             for (int x = 0; x < width; x++)
             {
-                float sampleX = x / scale;
-                float sampleY = y / scale;
+                float sampleX = x * m_frequency;
+                float sampleY = y * m_frequency;
 
                 float noiseHeight = generateNoise(sampleX, sampleY);
 
@@ -137,23 +146,29 @@ public class MountainNoise : MonoBehaviour
 
     void UpdateCrossSection(float direction)
     {
+        float scaleFactor = 0.1f;
+
         float x = m_endX - m_startX;
         float y = m_endY - m_startY;
 
-        float newX = x * Mathf.Cos(direction * Mathf.Deg2Rad) - y * Mathf.Sin(1.0f * Mathf.Deg2Rad);
-        float newY = x * Mathf.Sin(direction * Mathf.Deg2Rad) + y * Mathf.Cos(1.0f * Mathf.Deg2Rad);
+        float newX = x * Mathf.Cos(direction * scaleFactor * Mathf.Deg2Rad) - y * Mathf.Sin(1.0f * scaleFactor * Mathf.Deg2Rad);
+        float newY = x * Mathf.Sin(direction * scaleFactor * Mathf.Deg2Rad) + y * Mathf.Cos(1.0f * scaleFactor * Mathf.Deg2Rad);
 
         m_endX = newX + m_startX;
         m_endY = newY + m_startY;
+
+        // DEBUG console log
+        Debug.Log("Start: (" + m_startX + ", " + m_startY + ")");
+        Debug.Log("End: (" + m_endX + ", " + m_endY + ")");
 
         // Recompute the cross section
         for (int i = 0; i < m_crossSection.Length; i++)
         {
             // linearly interpolate between the points
-            x = Mathf.Lerp(m_startX, m_endX, (float)i / (float)m_crossSection.Length);
-            y = Mathf.Lerp(m_startY, m_endY, (float)i / (float)m_crossSection.Length);
+            int currx = (int)Mathf.Floor(Mathf.Lerp(m_startX, m_endX, (float)i / (float)m_crossSection.Length));
+            int curry = (int)Mathf.Floor(Mathf.Lerp(m_startY, m_endY, (float)i / (float)m_crossSection.Length));
 
-            m_crossSection[i] = generateNoise(x, y);
+            m_crossSection[i] = m_noiseMap[currx, curry] * m_amplitude;
         }
     }
 
@@ -164,9 +179,10 @@ public class MountainNoise : MonoBehaviour
     {
         for (int i = 0; i < m_crossSection.Length; i++)
         {
-            // Move the location of the circle in m_crossSection[i] to the new location
-            // (i, m_crossSection[i])
-            m_points[i].transform.position = new Vector3(i, m_crossSection[i], 0);
+            // Move the location of the circle in m_crossSection[i] to the new location: (i, m_crossSection[i])
+            m_points[i].transform.position = new Vector3(i * m_distBtwnPoints, m_crossSection[i] + m_baselineHeight, 0);
+
+            
         }
     }
 
@@ -174,21 +190,28 @@ public class MountainNoise : MonoBehaviour
     void Start()
     {
         // Set the start location
-        m_startX = Random.Range(0.0f, 100.0f);
-        m_startY = Random.Range(0.0f, 100.0f);
+        m_startX = 50.0f;// Random.Range(0.0f, 100.0f);
+        m_startY = 50.0f;// Random.Range(0.0f, 100.0f);
 
         // Set the destination location
         m_endX = Random.Range(0.0f, 100.0f);
         m_endY = Random.Range(0.0f, 100.0f);
 
+        // DEBUG console log
+        Debug.Log("Start: (" + m_startX + ", " + m_startY + ")");
+        Debug.Log("End: (" + m_endX + ", " + m_endY + ")");
+
+        // Generate the noise map so we can read from it
+        m_noiseMap = generateNoiseMap(99, 99);
+
         // From start point to end point, generate the noise along the line and store it in the cross section array
         for (int i = 0; i < m_crossSection.Length; i++)
         {
             // linearly interpolate between the points
-            float x = Mathf.Lerp(m_startX, m_endX, (float)i / (float)m_crossSection.Length);
-            float y = Mathf.Lerp(m_startY, m_endY, (float)i / (float)m_crossSection.Length);
+            int x = (int)Mathf.Floor(Mathf.Lerp(m_startX, m_endX, (float)i / (float)m_crossSection.Length));
+            int y = (int)Mathf.Floor(Mathf.Lerp(m_startY, m_endY, (float)i / (float)m_crossSection.Length));
 
-            m_crossSection[i] = generateNoise(x, y);
+            m_crossSection[i] = m_noiseMap[x,y] * m_amplitude; // generateNoise(x, y);
         }
 
         // Generate 30 circles to represent the points in m_crossSection
@@ -196,11 +219,13 @@ public class MountainNoise : MonoBehaviour
         for (int i = 0; i < m_crossSection.Length; i++)
         {
             // Create a 2d circle sprite of radius 5 pixels at the point (i, m_crossSection[i]) in screen space
-            GameObject point = GameObject.Instantiate(pointRef, new Vector3(i, m_crossSection[i], 0), Quaternion.identity);
+            GameObject point = GameObject.Instantiate(pointRef, new Vector3(i * m_distBtwnPoints, m_crossSection[i] + m_baselineHeight, 0), Quaternion.identity);
             m_points[i] = point;
+
+            // Create a line collider where each of its points is the point (i, m_crossSection[i])
         }
     }
-
+     
     // Update is called once per frame
     void Update()
     {
