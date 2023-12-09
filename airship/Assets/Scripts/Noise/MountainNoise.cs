@@ -198,8 +198,8 @@ public class MountainNoise : MonoBehaviour
     void Start()
     {
         // Set the start location
-        m_startX = 50.0f;// Random.Range(0.0f, 100.0f);
-        m_startY = 50.0f;// Random.Range(0.0f, 100.0f);
+        m_startX = 50.0f;
+        m_startY = 50.0f;
 
         // Set the destination location
         m_endX = Random.Range(0.0f, 100.0f);
